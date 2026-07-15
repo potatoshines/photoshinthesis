@@ -1,6 +1,7 @@
 {
   "images" : [
     {
+      "filename" : "Photoshinthesis-5 (1).jpg",
       "idiom" : "universal",
       "platform" : "ios",
       "size" : "1024x1024"
@@ -12,6 +13,7 @@
           "value" : "dark"
         }
       ],
+      "filename" : "Photoshinthesis-4 (1).jpg",
       "idiom" : "universal",
       "platform" : "ios",
       "size" : "1024x1024"

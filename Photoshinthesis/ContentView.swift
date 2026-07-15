@@ -2,79 +2,38 @@
 //  ContentView.swift
 //  Photoshinthesis
 //
-//  Created by Shin Aung on 7/12/26.
+//  The root tab bar — Today, Activities, Calendar. Settings isn't a tab;
+//  it's reached via the gear icon on Home, per your sketch's hamburger icon.
 //
-
+ 
 import SwiftUI
 import SwiftData
-
+ 
 struct ContentView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Query private var items: [Item]
-
+    @Environment(\.modelContext) private var context
+ 
     var body: some View {
-        NavigationViewWrapper {
-            List {
-                ForEach(items) { item in
-                    NavigationLink {
-                        Text("Item at \(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))")
-                    } label: {
-                        Text(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))
-                    }
-                }
-                .onDelete(perform: deleteItems)
-            }
-#if os(macOS)
-            .navigationSplitViewColumnWidth(min: 180, ideal: 200)
-#endif
-            .toolbar {
-#if os(iOS)
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
-                }
-#endif
-                ToolbarItem {
-                    Button(action: addItem) {
-                        Label("Add Item", systemImage: "plus")
-                    }
-                }
-            }
+        TabView {
+            HomeView()
+                .tabItem { Label("Today", systemImage: "leaf.fill") }
+ 
+            ActivitiesView()
+                .tabItem { Label("Activities", systemImage: "figure.run") }
+ 
+            CalendarView()
+                .tabItem { Label("Calendar", systemImage: "calendar") }
         }
-    }
-
-    private func addItem() {
-        withAnimation {
-            let newItem = Item(timestamp: Date())
-            modelContext.insert(newItem)
-        }
-    }
-
-    private func deleteItems(offsets: IndexSet) {
-        withAnimation {
-            for index in offsets {
-                modelContext.delete(items[index])
-            }
+        .tint(Color(hex: "#2E7D32"))
+        .onAppear {
+            // Runs once ever — seedDefaultActivitiesIfNeeded() checks for
+            // zero existing activities first, so this is a no-op on every
+            // launch after the first.
+            ActivityService(context: context).seedDefaultActivitiesIfNeeded()
         }
     }
 }
-
-fileprivate struct NavigationViewWrapper<Content: View>: View {
-    let content: () -> Content
-
-    var body: some View {
-#if os(macOS)
-        NavigationSplitView {
-            content()
-        } detail: {
-            Text("Select an item")
-        }
-#else
-        content()
-#endif
-    }
-}
-
+ 
 #Preview {
     ContentView()
-        .modelContainer(for: Item.self, inMemory: true)
+        .modelContainer(for: [Activity.self, Event.self, DailyGoal.self, AppSettings.self], inMemory: true)
 }

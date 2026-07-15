@@ -2,8 +2,6 @@
 //  PhotoshinthesisApp.swift
 //  Photoshinthesis
 //
-//  Created by Shin Aung on 7/12/26.
-//
 
 import SwiftUI
 import SwiftData
@@ -12,7 +10,10 @@ import SwiftData
 struct PhotoshinthesisApp: App {
     var sharedModelContainer: ModelContainer = {
         let schema = Schema([
-            Item.self,
+            Activity.self,
+            Event.self,
+            DailyGoal.self,
+            AppSettings.self
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
 
