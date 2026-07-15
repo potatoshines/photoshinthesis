@@ -1,8 +1,8 @@
 # Photoshinthesis 🌱
 
-A native iOS application that promotes personal productivity by encouraging users to spend more time on meaningful and productive activities instead of mindless distractions such as doom-scrolling on social media.
+A native iOS application that promotes personal productivity by encouraging users to make intentional choices and spend more time on meaningful, productive activities instead of passive habits such as doomscrolling on social media.
 
-Users manually log activities from studying and exercising to hobbies such as learning an instrument, and assign customizable points based on their personal values. Each day's goal is to complete a set amount of points which the user sets for themselves. Photoshinthesis can also be a lightweight journal, as with every activity stored each day, users can jot down specific notes or reflect on their past history.
+Users manually log activities from studying and exercising to hobbies such as learning an instrument, and assign customizable points based on their personal values. Each day's goal is to complete a set amount of points which the user sets for themselves. Photoshinthesis can also be a lightweight journal, as with every activity stored, users can jot down specific notes, or they can reflect on their past history.
                                                 
 > **Status:** Early draft, actively in development.
 
