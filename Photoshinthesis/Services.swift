@@ -251,6 +251,16 @@ enum PlantGrowthEngine {
         }
         return current
     }
+    
+    /// Continuous 0...1 value for scrubbing the Lottie animation, based on
+    /// how far the streak is toward full maturity (the last threshold).
+    /// Unlike `stage(forStreak:)`, this doesn't jump in discrete steps —
+    /// it smoothly increases day by day, so the animation visibly
+    /// progresses even between named stages.
+    static func overallProgress(forStreak streak: Int) -> Double {
+        guard let maxDays = thresholds.last?.daysRequired, maxDays > 0 else { return 0 }
+        return min(Double(streak) / Double(maxDays), 1.0)
+    }
 }
 
 // MARK: - SettingsStore

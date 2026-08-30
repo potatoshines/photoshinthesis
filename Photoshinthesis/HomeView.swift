@@ -9,6 +9,7 @@
 
 import SwiftUI
 import SwiftData
+import UIKit
 
 struct HomeView: View {
     @Environment(\.modelContext) private var context
@@ -17,6 +18,8 @@ struct HomeView: View {
     @State private var showingLogSheet = false
     @State private var showingSettings = false
     @State private var plantTapped = false
+    @State private var sparkleBurstID = 0
+    @State private var plantCelebrationTrigger = 0
 
     private var todayEvents: [Event] {
         allEvents.filter { $0.timestamp.isSameDay(as: .now) }
@@ -51,9 +54,13 @@ struct HomeView: View {
 
                     ZStack {
                         ProgressRingView(progress: progress)
+                        SparkleBurstView(trigger: sparkleBurstID)
                         VStack(spacing: 4) {
-                            Text(plantStage.emoji)
-                                .font(.system(size: 70))
+                            PlantAnimationView(
+                                progress: progress,
+                                celebrationTrigger: plantCelebrationTrigger,
+                                onCelebrationFinished: { sparkleBurstID += 1 }
+                            )
                                 .onTapGesture {
                                     withAnimation(.spring) { plantTapped.toggle() }
                                 }
@@ -101,6 +108,12 @@ struct HomeView: View {
                 }
                 ToolbarItem(placement: .topBarTrailing) {
                     StreakBadge(streak: streak)
+                }
+            }
+            .onChange(of: progress) { oldValue, newValue in
+                if newValue >= 1.0 && oldValue < 1.0 {
+                    plantCelebrationTrigger += 1
+                    UINotificationFeedbackGenerator().notificationOccurred(.success)
                 }
             }
             .sheet(isPresented: $showingLogSheet) {
@@ -216,6 +229,38 @@ private struct StreakBadge: View {
     }
 }
 
+private struct SparkleBurstView: View {
+    let trigger: Int
+    @State private var animate = false
+
+    private let sparkles: [(x: CGFloat, y: CGFloat, delay: Double)] = [
+        (-60, -40, 0.0), (60, -50, 0.05), (-70, 20, 0.1),
+        (70, 30, 0.05), (0, -75, 0.15), (-30, 65, 0.1),
+        (30, 70, 0.0), (0, 80, 0.2)
+    ]
+
+    var body: some View {
+        ZStack {
+            ForEach(Array(sparkles.enumerated()), id: \.offset) { _, sparkle in
+                Image(systemName: "sparkle")
+                    .font(.system(size: 16))
+                    .foregroundStyle(Color(hex: "#F4C542"))
+                    .offset(x: sparkle.x, y: sparkle.y)
+                    .scaleEffect(animate ? 1.2 : 0.1)
+                    .opacity(animate ? 0 : 1)
+                    .animation(.easeOut(duration: 0.7).delay(sparkle.delay), value: animate)
+            }
+        }
+        .allowsHitTesting(false)
+        .onChange(of: trigger) { _, _ in
+            animate = false
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.02) {
+                animate = true
+            }
+        }
+    }
+}
+
 private struct TodayEventRow: View {
     let event: Event
     let onDelete: () -> Void
@@ -241,7 +286,7 @@ private struct TodayEventRow: View {
                             .foregroundStyle(Color(hex: event.colorHexSnapshot))
                     }
                     .frame(width: 40, height: 40)
- 
+                    
                     VStack(alignment: .leading, spacing: 2) {
                         Text(event.activityNameSnapshot).font(.body.weight(.medium))
                         Text(event.timestamp.formatted(date: .omitted, time: .shortened))
