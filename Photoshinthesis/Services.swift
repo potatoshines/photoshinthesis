@@ -173,8 +173,8 @@ final class GoalResolver {
 // MARK: - StreakCalculator
 
 /// A day "counts" when total points earned meet or exceed that day's goal.
-/// This single rule drives both the streak badge and the plant's growth
-/// pausing (spec: "missing a day simply pauses growth").
+/// Still used for the streak badge on Home — separate from plant growth,
+/// which now tracks today's progress instead (see PlantGrowthEngine).
 @MainActor
 final class StreakCalculator {
     private let eventService: EventService
@@ -209,10 +209,11 @@ final class StreakCalculator {
 // MARK: - PlantGrowthEngine
 
 enum PlantGrowthStage: String, CaseIterable {
-    case sprout, smallPlant, leafyPlant, floweringPlant, maturePlant
+    case dormant, sprout, smallPlant, leafyPlant, floweringPlant, maturePlant
 
     var displayName: String {
         switch self {
+        case .dormant: return "Seed"
         case .sprout: return "Sprout"
         case .smallPlant: return "Small Plant"
         case .leafyPlant: return "Leafy Plant"
@@ -221,10 +222,9 @@ enum PlantGrowthStage: String, CaseIterable {
         }
     }
 
-    /// Placeholder emoji art — swap for real illustrations later without
-    /// touching any other file, since everything reads through this enum.
     var emoji: String {
         switch self {
+        case .dormant: return "🌰"
         case .sprout: return "🌱"
         case .smallPlant: return "🌿"
         case .leafyPlant: return "🍀"
@@ -234,27 +234,19 @@ enum PlantGrowthStage: String, CaseIterable {
     }
 }
 
+/// Maps today's progress (0.0...1.0, i.e. points earned ÷ today's goal) to
+/// a growth stage. Entirely day-based — resets naturally each day along
+/// with `progress` itself, independent of streak.
 enum PlantGrowthEngine {
-    private static let thresholds: [(stage: PlantGrowthStage, daysRequired: Int)] = [
-        (.sprout, 0), (.smallPlant, 3), (.leafyPlant, 7), (.floweringPlant, 14), (.maturePlant, 30)
-    ]
-
-    static func stage(forStreak streak: Int) -> PlantGrowthStage {
-        var current: PlantGrowthStage = .sprout
-        for entry in thresholds where streak >= entry.daysRequired {
-            current = entry.stage
+    static func stage(forProgress progress: Double) -> PlantGrowthStage {
+        switch progress {
+        case 0: return .dormant
+        case ...0.15: return .sprout
+        case ...0.30: return .smallPlant
+        case ...0.60: return .leafyPlant
+        case ..<1.0: return .floweringPlant
+        default: return .maturePlant
         }
-        return current
-    }
-    
-    /// Continuous 0...1 value for scrubbing the Lottie animation, based on
-    /// how far the streak is toward full maturity (the last threshold).
-    /// Unlike `stage(forStreak:)`, this doesn't jump in discrete steps —
-    /// it smoothly increases day by day, so the animation visibly
-    /// progresses even between named stages.
-    static func overallProgress(forStreak streak: Int) -> Double {
-        guard let maxDays = thresholds.last?.daysRequired, maxDays > 0 else { return 0 }
-        return min(Double(streak) / Double(maxDays), 1.0)
     }
 }
 

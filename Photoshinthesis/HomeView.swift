@@ -38,7 +38,7 @@ struct HomeView: View {
     }
 
     private var plantStage: PlantGrowthStage {
-        PlantGrowthEngine.stage(forStreak: streak)
+        PlantGrowthEngine.stage(forProgress: progress)
     }
 
     private var progress: Double {
