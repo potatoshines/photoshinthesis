@@ -27,10 +27,10 @@ final class ActivityService {
     @discardableResult
     func createActivity(
         name: String, defaultPoints: Double, category: Category,
-        iconName: String? = nil, colorHex: String, aliases: [String] = []
+        iconName: String? = nil, colorHex: String
     ) -> Activity {
         let activity = Activity(name: name, defaultPoints: defaultPoints, category: category,
-                                 iconName: iconName, colorHex: colorHex, aliases: aliases)
+                                 iconName: iconName, colorHex: colorHex)
         context.insert(activity)
         save()
         return activity
@@ -38,14 +38,13 @@ final class ActivityService {
 
     func updateActivity(
         _ activity: Activity, name: String, defaultPoints: Double, category: Category,
-        iconName: String, colorHex: String, aliases: [String]
+        iconName: String, colorHex: String
     ) {
         activity.name = name
         activity.defaultPoints = defaultPoints
         activity.category = category
         activity.iconName = iconName
         activity.colorHex = colorHex
-        activity.aliases = aliases
         save()
     }
 
@@ -58,10 +57,6 @@ final class ActivityService {
             activity.isArchived = true
         }
         save()
-    }
-
-    func findActivity(matchingAlias raw: String) -> Activity? {
-        fetchActiveActivities().first { $0.matches(alias: raw) }
     }
 
     /// Creates a small set of starter templates for brand-new users. Only

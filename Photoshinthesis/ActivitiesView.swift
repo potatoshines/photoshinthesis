@@ -16,8 +16,19 @@ struct ActivitiesView: View {
     @Query(filter: #Predicate<Activity> { !$0.isArchived }, sort: \Activity.name)
     private var activities: [Activity]
 
-    @State private var editingActivity: Activity?
-    @State private var showingEditor = false
+    private enum EditorTarget: Identifiable {
+        case new
+        case edit(Activity)
+
+        var id: String {
+            switch self {
+            case .new: return "new"
+            case .edit(let activity): return activity.id.uuidString
+            }
+        }
+    }
+
+    @State private var editorTarget: EditorTarget?
 
     private let columns = [GridItem(.flexible()), GridItem(.flexible())]
 
@@ -33,8 +44,7 @@ struct ActivitiesView: View {
                     LazyVGrid(columns: columns, spacing: 16) {
                         ForEach(activities) { activity in
                             ActivityCard(activity: activity) {
-                                editingActivity = activity
-                                showingEditor = true
+                                editorTarget = .edit(activity)
                             } onDelete: {
                                 ActivityService(context: context).archiveActivity(activity)
                             }
@@ -43,8 +53,7 @@ struct ActivitiesView: View {
                     .padding(.horizontal)
 
                     Button {
-                        editingActivity = nil
-                        showingEditor = true
+                        editorTarget = .new
                     } label: {
                         Label("New", systemImage: "plus.circle.fill")
                     }
@@ -55,8 +64,13 @@ struct ActivitiesView: View {
             }
             .background(Color(hex: "#FAF9F3"))
             .navigationTitle("Activities")
-            .sheet(isPresented: $showingEditor) {
-                ActivityEditorView(activity: editingActivity)
+            .sheet(item: $editorTarget) { target in
+                switch target {
+                case .new:
+                    ActivityEditorView(activity: nil)
+                case .edit(let activity):
+                    ActivityEditorView(activity: activity)
+                }
             }
         }
     }
@@ -125,8 +139,6 @@ private struct ActivityEditorView: View {
     @State private var points: Double
     @State private var category: Category
     @State private var colorHex: String
-    @State private var aliases: [String]
-    @State private var newAlias: String = ""
 
     private let colorOptions = ["#4CAF50", "#2E7D32", "#1976D2", "#F57C00", "#8E24AA", "#D32F2F", "#00838F", "#5D4037"]
 
@@ -136,7 +148,6 @@ private struct ActivityEditorView: View {
         _points = State(initialValue: activity?.defaultPoints ?? 1)
         _category = State(initialValue: activity?.category ?? .other)
         _colorHex = State(initialValue: activity?.colorHex ?? "#4CAF50")
-        _aliases = State(initialValue: activity?.aliases ?? [])
     }
 
     var body: some View {
@@ -171,23 +182,6 @@ private struct ActivityEditorView: View {
                         }
                     }
                 }
-
-                Section("Aliases") {
-                    ForEach(aliases, id: \.self) { alias in
-                        Text(alias)
-                    }
-                    .onDelete { indices in aliases.remove(atOffsets: indices) }
-
-                    HStack {
-                        TextField("e.g. leg day", text: $newAlias)
-                        Button("Add") {
-                            let trimmed = newAlias.trimmingCharacters(in: .whitespaces)
-                            guard !trimmed.isEmpty else { return }
-                            aliases.append(trimmed)
-                            newAlias = ""
-                        }
-                    }
-                }
             }
             .navigationTitle(activity == nil ? "New Activity" : "Edit Activity")
             .toolbar {
@@ -207,12 +201,12 @@ private struct ActivityEditorView: View {
         if let activity {
             service.updateActivity(
                 activity, name: name, defaultPoints: points, category: category,
-                iconName: activity.iconName, colorHex: colorHex, aliases: aliases
+                iconName: activity.iconName, colorHex: colorHex
             )
         } else {
             service.createActivity(
                 name: name, defaultPoints: points, category: category,
-                colorHex: colorHex, aliases: aliases
+                colorHex: colorHex
             )
         }
         dismiss()

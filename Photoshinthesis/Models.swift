@@ -48,9 +48,6 @@ enum Category: String, Codable, CaseIterable, Identifiable {
 
 // MARK: - Activity
 
-/// A reusable template (e.g. "Gym", "Reading"). Events are logged against
-/// an Activity. Aliases let messy real-world naming ("leg day", "lifting")
-/// all map back to one Activity for clean analytics later.
 @Model
 final class Activity {
     @Attribute(.unique) var id: UUID
@@ -59,7 +56,6 @@ final class Activity {
     var category: Category
     var iconName: String
     var colorHex: String
-    var aliases: [String]
     var isArchived: Bool
     var createdAt: Date
 
@@ -73,7 +69,6 @@ final class Activity {
         category: Category = .other,
         iconName: String? = nil,
         colorHex: String = "#4CAF50",
-        aliases: [String] = [],
         isArchived: Bool = false,
         createdAt: Date = .now
     ) {
@@ -83,16 +78,8 @@ final class Activity {
         self.category = category
         self.iconName = iconName ?? category.defaultIconName
         self.colorHex = colorHex
-        self.aliases = aliases
         self.isArchived = isArchived
         self.createdAt = createdAt
-    }
-
-    func matches(alias raw: String) -> Bool {
-        let normalized = raw.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        guard !normalized.isEmpty else { return false }
-        if name.lowercased() == normalized { return true }
-        return aliases.contains { $0.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() == normalized }
     }
 }
 
