@@ -158,8 +158,12 @@ private struct ActivityEditorView: View {
                 }
 
                 Section("Points") {
-                    Stepper(value: $points, in: 0...100, step: 0.5) {
-                        Text("\(points, specifier: "%.2g") points")
+                    HStack {
+                        TextField("Points", value: $points, format: .number)
+                            .keyboardType(.decimalPad)
+                            .frame(width: 60)
+                        Stepper("", value: $points, in: 0...100, step: 0.5)
+                            .labelsHidden()
                     }
                 }
 
@@ -184,6 +188,9 @@ private struct ActivityEditorView: View {
                 }
             }
             .navigationTitle(activity == nil ? "New Activity" : "Edit Activity")
+            .keyboardDismissButton()
+            .dismissKeyboardOnOutsideTap()
+            .scrollDismissesKeyboard(.immediately)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }

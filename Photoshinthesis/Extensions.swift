@@ -6,6 +6,43 @@
 //
 
 import SwiftUI
+import UIKit
+
+/// Resigns the currently focused text input, dismissing the keyboard —
+/// works regardless of which specific field is focused.
+func hideKeyboard() {
+    UIApplication.shared.sendAction(
+        #selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil
+    )
+}
+
+extension View {
+    /// A compact icon button in the keyboard's own toolbar — rounded
+    /// rectangle, not a pill, per design preference.
+    func keyboardDismissButton() -> some View {
+        toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button(action: hideKeyboard) {
+                    Image(systemName: "keyboard.chevron.compact.down")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(RoundedRectangle(cornerRadius: 8).fill(Color(hex: "#2E7D32")))
+                }
+            }
+        }
+    }
+
+    /// Dismisses the keyboard on any tap elsewhere on screen — including
+    /// taps that also hit another button/control, which still fire
+    /// normally. Uses `simultaneousGesture` rather than `onTapGesture`,
+    /// which would otherwise swallow taps meant for other controls.
+    func dismissKeyboardOnOutsideTap() -> some View {
+        simultaneousGesture(TapGesture().onEnded { hideKeyboard() })
+    }
+}
 
 // MARK: - Color from hex
 
